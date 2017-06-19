@@ -2256,6 +2256,8 @@ var jsPDF = (function(global) {
 			throw new Error('addImage currently only supports format \'JPEG\', not \''+format+'\'');
 		}
 		var originaldimensions = getJpegSize(imageData);
+		// Check for blank or empty file. When using adding an image from a temp file, on first run, using Ti SDK 6.1.0.GA the temp file is returning as blank.
+    	if (typeof originaldimensions === "undefined") { return; }
 		var imageIndex
 			, images = this.internal.collections[namespace + 'images']
 			, coord = this.internal.getCoordinateString
