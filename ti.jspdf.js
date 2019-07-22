@@ -2140,35 +2140,37 @@ var jsPDF = (function(global) {
 			Ti.Stream.createStream({
 				source: imgData,
 				mode: Ti.Stream.MODE_READ
-			}).read(imageBuffer);
-			// Verify we have a valid jpeg header 255,216,255,224,?,?,74,70,73,70,0
-			if (!imageBuffer[0] === 255 ||
-				!imageBuffer[1] === 216 ||
-				!imageBuffer[2] === 255 ||
-				!imageBuffer[3] === 224 ||
-				!imageBuffer[6] ===  74 || // J
-				!imageBuffer[7] ===  70 || // F
-				!imageBuffer[8] ===  73 || // I
-				!imageBuffer[9] ===  70 || // F
-				!imageBuffer[10]===  0 ) {
-				throw new Error('getJpegSize requires a binary jpeg file');
-			}
-			var blockLength = imageBuffer[4]*256 + imageBuffer[5];
-			var i = 4, len = imgData.length;
-			while ( i < len ) {
-				i += blockLength;
-				if (imageBuffer[i] !== 255) {
-					throw new Error('getJpegSize could not find the size of the image. This may be because the headers of the JPEG have been removed or the image cannot be found.');
+			}).read(imageBuffer, function() {
+				// Verify we have a valid jpeg header 255,216,255,224,?,?,74,70,73,70,0
+				if (!imageBuffer[0] === 255 ||
+					!imageBuffer[1] === 216 ||
+					!imageBuffer[2] === 255 ||
+					!imageBuffer[3] === 224 ||
+					!imageBuffer[6] ===  74 || // J
+					!imageBuffer[7] ===  70 || // F
+					!imageBuffer[8] ===  73 || // I
+					!imageBuffer[9] ===  70 || // F
+					!imageBuffer[10]===  0 ) {
+					throw new Error('getJpegSize requires a binary jpeg file');
 				}
-				if (imageBuffer[i+1] === 192) {
-					height = imageBuffer[i+5]*256 + imageBuffer[i+6];
-					width = imageBuffer[i+7]*256 + imageBuffer[i+8];
-					return {width:width, height:height,filesize:filesize};
-				} else {
-					i += 2;
-					blockLength = imageBuffer[i]*256 + imageBuffer[i+1];
-				}
-			}
+				var blockLength = imageBuffer[4]*256 + imageBuffer[5];
+				var i = 4, len = imgData.length;
+				while ( i < len ) {
+					i += blockLength;
+					if (imageBuffer[i] !== 255) {
+						throw new Error('getJpegSize could not find the size of the image. This may be because the headers of the JPEG have been removed or the image cannot be found.');
+					}
+					if (imageBuffer[i+1] === 192) {
+						height = imageBuffer[i+5]*256 + imageBuffer[i+6];
+						width = imageBuffer[i+7]*256 + imageBuffer[i+8];
+						return {width:width, height:height,filesize:filesize};
+					} else {
+						i += 2;
+						blockLength = imageBuffer[i]*256 + imageBuffer[i+1];
+					}
+				}	
+			});
+		
 		}
 // Image functionality ported from pdf.js
 		, putImage = function(img) {
